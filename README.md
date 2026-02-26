@@ -44,7 +44,7 @@ The Health Voice Monitor is an innovative front-end application designed to moni
 
 1. 克隆项目到本地
    ```bash
-   git clone https://github.com/yourusername/health-voice-monitor.git
+   git clone https://github.com/realDavy/health-voice-monitor.git
    ```
 
 2. 进入项目目录
@@ -166,7 +166,7 @@ Health Voice Monitor is an innovative front-end application designed to monitor 
 
 1. Clone the project locally
    ```bash
-   git clone https://github.com/yourusername/health-voice-monitor.git
+   git clone https://github.com/realDavy/health-voice-monitor.git
    ```
 
 2. Enter the project directory
