@@ -113,8 +113,8 @@ The Health Voice Monitor is an innovative front-end application designed to moni
 
 如有问题或建议，请联系我们：
 
-- 邮箱: contact@healthvoice.com
-- 项目链接: https://github.com/yourusername/health-voice-monitor
+- 邮箱: contact@jdm.com
+- 项目链接: https://github.com/realDavy/health-voice-monitor
 
 ## 免责声明
 
