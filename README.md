@@ -114,7 +114,7 @@ The Health Voice Monitor is an innovative front-end application designed to moni
 如有问题或建议，请联系我们：
 
 - 邮箱: contact@jdm.com
-- 项目链接: https://github.com/realDavy/health-voice-monitor
+- 项目链接:https://realdavy.github.io/Health-Voice-Monitor
 
 ## 免责声明
 
@@ -236,7 +236,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you have any questions or suggestions, please contact us:
 
 - Email: contact@jdm.com
-- Project Link: https://github.com/realDavy/health-voice-monitor
+- Project Link:https://realdavy.github.io/Health-Voice-Monitor
 
 ## Disclaimer
 
