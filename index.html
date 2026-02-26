@@ -1,0 +1,1203 @@
+<html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康声音监测系统 - 长期声音变化趋势分析</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- 统一的 Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a56db',
+                        secondary: '#0ea5e9',
+                        accent: '#38bdf8',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        info: '#6366f1',
+                        light: '#f3f4f6',
+                        dark: '#1f2937'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .glass-effect {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .card-hover {
+                transition: all 0.3s ease;
+            }
+            .card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+            }
+            .audio-wave {
+                position: relative;
+                height: 60px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .audio-wave .bar {
+                width: 4px;
+                margin: 0 2px;
+                border-radius: 2px;
+                background-color: #38bdf8;
+                animation: sound 0ms -800ms linear infinite alternate;
+            }
+            @keyframes sound {
+                0% {
+                    height: 3px;
+                }
+                100% {
+                    height: 40px;
+                }
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <img src="https://p26-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/a66267090af54ff5bbab2b77b505be8e~tplv-a9rns2rl98-image.image?lk3s=8e244e95&amp;rcl=20260226105034A4AA99B95B5F07BDE773&amp;rrcfp=f06b921b&amp;x-expires=1774666285&amp;x-signature=p1Vf93VKFR7bwNRHPqD8B38ZvY8%3D" alt="健康声音监测系统" class="h-10 w-10">
+                <h1 class="text-xl font-bold text-primary">健康声音监测系统</h1>
+            </div>
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="#dashboard" class="text-gray-700 hover:text-primary transition-colors">数据概览</a>
+                <a href="#record" class="text-gray-700 hover:text-primary transition-colors">声音采集</a>
+                <a href="#analysis" class="text-gray-700 hover:text-primary transition-colors">数据分析</a>
+                <a href="#health-data" class="text-gray-700 hover:text-primary transition-colors">健康数据</a>
+                <a href="#reports" class="text-gray-700 hover:text-primary transition-colors">AI报告</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                    <i class="fa fa-user-circle mr-2"></i>登录
+                </button>
+                <button class="md:hidden text-gray-700" id="mobile-menu-button">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <!-- 移动端菜单 -->
+        <div class="md:hidden hidden bg-white w-full border-t" id="mobile-menu">
+            <div class="container mx-auto px-4 py-2 flex flex-col space-y-3">
+                <a href="#dashboard" class="text-gray-700 hover:text-primary py-2 transition-colors">数据概览</a>
+                <a href="#record" class="text-gray-700 hover:text-primary py-2 transition-colors">声音采集</a>
+                <a href="#analysis" class="text-gray-700 hover:text-primary py-2 transition-colors">数据分析</a>
+                <a href="#health-data" class="text-gray-700 hover:text-primary py-2 transition-colors">健康数据</a>
+                <a href="#reports" class="text-gray-700 hover:text-primary py-2 transition-colors">AI报告</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 欢迎横幅 -->
+        <section class="mb-10 bg-gradient-to-r from-primary to-secondary rounded-xl shadow-lg overflow-hidden">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="p-8 md:p-12 md:w-1/2 text-white">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4 text-shadow">长期声音变化趋势监测</h2>
+                    <p class="text-lg mb-6 opacity-90">通过分析您的声音特征变化，结合健康数据，早期发现潜在健康风险，特别是情绪和神经系统相关疾病。</p>
+                    <div class="flex flex-wrap gap-4">
+                        <button class="bg-white text-primary px-6 py-3 rounded-md font-medium hover:bg-opacity-90 transition-colors">
+                            开始录音分析
+                        </button>
+                        <button class="bg-transparent border-2 border-white text-white px-6 py-3 rounded-md font-medium hover:bg-white hover:bg-opacity-10 transition-colors">
+                            了解更多
+                        </button>
+                    </div>
+                </div>
+                <div class="md:w-1/2 p-8">
+                    <img src="https://p26-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d07764c7c3f448cebcd0bb66bce43223~tplv-a9rns2rl98-image.image?lk3s=8e244e95&amp;rcl=20260226105034A4AA99B95B5F07BDE773&amp;rrcfp=f06b921b&amp;x-expires=1774666294&amp;x-signature=4MNZHnLy4t3B0F%2FMpXFVKGIUYHU%3D" alt="声音健康监测" class="w-full rounded-lg shadow-lg">
+                </div>
+            </div>
+        </section>
+
+        <!-- 数据概览 -->
+        <section id="dashboard" class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">数据概览</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- 卡片 1：最近录音 -->
+                <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">最近录音</h3>
+                        <span class="text-xs text-gray-500">2023-07-15</span>
+                    </div>
+                    <div class="audio-wave mb-4">
+                        <div class="bar" style="height:10px; animation-delay: 0ms"></div>
+                        <div class="bar" style="height:20px; animation-delay: 100ms"></div>
+                        <div class="bar" style="height:30px; animation-delay: 200ms"></div>
+                        <div class="bar" style="height:25px; animation-delay: 300ms"></div>
+                        <div class="bar" style="height:15px; animation-delay: 400ms"></div>
+                        <div class="bar" style="height:35px; animation-delay: 500ms"></div>
+                        <div class="bar" style="height:20px; animation-delay: 600ms"></div>
+                        <div class="bar" style="height:25px; animation-delay: 700ms"></div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">持续时间: 30秒</span>
+                        <button class="text-primary hover:text-primary/80">
+                            <i class="fa fa-play-circle text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 卡片 2：情绪状态 -->
+                <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">情绪状态</h3>
+                        <span class="text-xs text-gray-500">过去7天</span>
+                    </div>
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="relative w-32 h-32">
+                            <canvas id="moodChart"></canvas>
+                            <div class="absolute inset-0 flex items-center justify-center flex-col">
+                                <span class="text-3xl font-bold text-primary">78%</span>
+                                <span class="text-xs text-gray-500">积极情绪</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-600">
+                        <span>趋势: <span class="text-success">稳定</span></span>
+                        <span>变化: <span class="text-success">+2%</span></span>
+                    </div>
+                </div>
+                
+                <!-- 卡片 3：健康评分 -->
+                <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">健康评分</h3>
+                        <span class="text-xs text-gray-500">综合评估</span>
+                    </div>
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="text-center">
+                            <div class="text-5xl font-bold text-primary mb-2">85</div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-primary h-2.5 rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-600">
+                        <span>上次评分: 83</span>
+                        <span class="text-success">↑ 2</span>
+                    </div>
+                </div>
+                
+                <!-- 卡片 4：风险评估 -->
+                <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">风险评估</h3>
+                        <span class="text-xs text-gray-500">AI分析结果</span>
+                    </div>
+                    <div class="space-y-3 mb-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>情绪波动</span>
+                                <span class="text-warning">中等</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-warning h-2 rounded-full" style="width: 60%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>压力水平</span>
+                                <span class="text-success">低</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-success h-2 rounded-full" style="width: 30%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>健康风险</span>
+                                <span class="text-success">低</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-success h-2 rounded-full" style="width: 20%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="w-full text-center text-primary text-sm hover:underline">
+                        查看详细报告
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 声音采集 -->
+        <section id="record" class="mb-12">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="p-6 md:p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">声音采集</h2>
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <div class="md:w-1/2">
+                            <div class="bg-blue-50 rounded-lg p-6 mb-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">录音说明</h3>
+                                <ul class="space-y-2 text-gray-700">
+                                    <li class="flex items-start">
+                                        <i class="fa fa-check-circle text-primary mt-1 mr-2"></i>
+                                        <span>请在安静环境中进行录音</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fa fa-check-circle text-primary mt-1 mr-2"></i>
+                                        <span>保持正常语速，朗读提示文本</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fa fa-check-circle text-primary mt-1 mr-2"></i>
+                                        <span>每次录音建议持续30秒</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fa fa-check-circle text-primary mt-1 mr-2"></i>
+                                        <span>建议每天固定时间进行录音</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">朗读文本</h3>
+                                <p class="text-gray-700 italic">
+                                    "今天天气晴朗，阳光明媚。我感觉精神状态良好，没有明显的不适。最近工作顺利，睡眠质量也不错。希望能够保持这种状态，继续积极面对生活和工作中的挑战。"
+                                </p>
+                            </div>
+                        </div>
+                        <div class="md:w-1/2">
+                            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6 flex flex-col items-center justify-center min-h-[300px]">
+                                <div class="mb-6 text-center">
+                                    <div class="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                                        <i class="fa fa-microphone text-4xl text-primary"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-gray-800" id="recording-status">准备录音</h3>
+                                    <p class="text-gray-600 text-sm mt-2" id="recording-timer">00:00</p>
+                                </div>
+                                <div class="audio-wave mb-6" id="audio-visualization">
+                                    <div class="bar" style="height:10px; animation-delay: 0ms"></div>
+                                    <div class="bar" style="height:10px; animation-delay: 100ms"></div>
+                                    <div class="bar" style="height:10px; animation-delay: 200ms"></div>
+                                    <div class="bar" style="height:10px; animation-delay: 300ms"></div>
+                                    <div class="bar" style="height:10px; animation-delay: 400ms"></div>
+                                    <div class="bar" style="height:10px; animation-delay: 500ms"></div>
+                                    <div class="bar" style="height:10px; animation-delay: 600ms"></div>
+                                    <div class="bar" style="height:10px; animation-delay: 700ms"></div>
+                                </div>
+                                <div class="flex space-x-4">
+                                    <button id="start-recording" class="bg-primary text-white px-6 py-3 rounded-md hover:bg-primary/90 transition-colors">
+                                        开始录音
+                                    </button>
+                                    <button id="stop-recording" class="bg-gray-200 text-gray-700 px-6 py-3 rounded-md hover:bg-gray-300 transition-colors" disabled="">
+                                        停止录音
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 数据分析 -->
+        <section id="analysis" class="mb-12">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="p-6 md:p-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">数据分析</h2>
+                        <div class="flex space-x-2 mt-4 md:mt-0">
+                            <select id="time-range" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block p-2.5">
+                                <option value="7">过去7天</option>
+                                <option value="30" selected="">过去30天</option>
+                                <option value="90">过去90天</option>
+                                <option value="180">过去半年</option>
+                                <option value="365">过去一年</option>
+                            </select>
+                            <button class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                                <i class="fa fa-refresh mr-1"></i> 更新
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 声音特征趋势图 -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">声音特征趋势</h3>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <canvas id="voiceFeaturesChart" height="300"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- 声音特征与健康指标相关性 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">音高与情绪相关性</h3>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <canvas id="pitchMoodChart" height="250"></canvas>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">音量与压力水平相关性</h3>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <canvas id="volumeStressChart" height="250"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 异常点分析 -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">异常点分析</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">异常特征</th>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">数值</th>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">正常范围</th>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">可能原因</th>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">建议</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">2023-07-10</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">音高</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-danger font-medium">145 Hz</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">110-130 Hz</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">可能情绪激动</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                观察
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">2023-07-05</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">语速</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-danger font-medium">180 字/分钟</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">120-160 字/分钟</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">可能压力较大</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                减压活动
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">2023-06-28</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">音色</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-danger font-medium">0.45</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">0.6-0.8</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">可能疲劳或感冒</td>
+                                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                休息
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 健康数据整合 -->
+        <section id="health-data" class="mb-12">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="p-6 md:p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">健康数据整合</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <!-- 数据导入 -->
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">数据导入</h3>
+                            <p class="text-gray-600 mb-4">导入您的健康数据，与声音特征进行关联分析</p>
+                            <div class="space-y-3">
+                                <button class="w-full flex items-center justify-center space-x-2 bg-white border border-gray-300 rounded-md px-4 py-2 hover:bg-gray-50">
+                                    <i class="fa fa-apple text-gray-700"></i>
+                                    <span>Apple Health</span>
+                                </button>
+                                <button class="w-full flex items-center justify-center space-x-2 bg-white border border-gray-300 rounded-md px-4 py-2 hover:bg-gray-50">
+                                    <i class="fa fa-heartbeat text-red-500"></i>
+                                    <span>Fitbit</span>
+                                </button>
+                                <button class="w-full flex items-center justify-center space-x-2 bg-white border border-gray-300 rounded-md px-4 py-2 hover:bg-gray-50">
+                                    <i class="fa fa-android text-green-500"></i>
+                                    <span>Google Fit</span>
+                                </button>
+                                <button class="w-full flex items-center justify-center space-x-2 bg-white border border-gray-300 rounded-md px-4 py-2 hover:bg-gray-50">
+                                    <i class="fa fa-upload text-blue-500"></i>
+                                    <span>手动上传</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 健康指标 -->
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">健康指标</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>睡眠质量</span>
+                                        <span class="text-primary font-medium">7.5 小时</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-primary h-2 rounded-full" style="width: 75%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>活动水平</span>
+                                        <span class="text-primary font-medium">8,500 步</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-primary h-2 rounded-full" style="width: 85%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>心率</span>
+                                        <span class="text-primary font-medium">72 BPM</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-primary h-2 rounded-full" style="width: 72%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>压力水平</span>
+                                        <span class="text-success font-medium">低</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-success h-2 rounded-full" style="width: 30%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 数据关联 -->
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">数据关联</h3>
+                            <p class="text-gray-600 mb-4">声音特征与健康数据的关联强度</p>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-700">睡眠质量</span>
+                                    <div class="flex items-center">
+                                        <div class="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                            <div class="bg-info h-2 rounded-full" style="width: 85%"></div>
+                                        </div>
+                                        <span class="text-xs text-gray-500">强</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-700">活动水平</span>
+                                    <div class="flex items-center">
+                                        <div class="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                            <div class="bg-info h-2 rounded-full" style="width: 60%"></div>
+                                        </div>
+                                        <span class="text-xs text-gray-500">中</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-700">心率变异性</span>
+                                    <div class="flex items-center">
+                                        <div class="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                            <div class="bg-info h-2 rounded-full" style="width: 75%"></div>
+                                        </div>
+                                        <span class="text-xs text-gray-500">强</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-700">压力水平</span>
+                                    <div class="flex items-center">
+                                        <div class="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                            <div class="bg-info h-2 rounded-full" style="width: 90%"></div>
+                                        </div>
+                                        <span class="text-xs text-gray-500">很强</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 健康数据趋势 -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">健康数据趋势</h3>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <canvas id="healthDataChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI分析报告 -->
+        <section id="reports" class="mb-12">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="p-6 md:p-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">AI分析报告</h2>
+                        <button class="mt-4 md:mt-0 bg-primary text-white px-6 py-3 rounded-md hover:bg-primary/90 transition-colors">
+                            <i class="fa fa-refresh mr-2"></i>生成新报告
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- 左侧：报告摘要 -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6 sticky top-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-800">报告摘要</h3>
+                                    <span class="text-xs text-gray-500">2023-07-15</span>
+                                </div>
+                                <div class="mb-6">
+                                    <div class="flex items-center justify-center mb-4">
+                                        <div class="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
+                                            <span class="text-3xl font-bold text-primary">85</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-center mb-4">
+                                        <h4 class="text-lg font-semibold text-gray-800">整体健康评分</h4>
+                                        <p class="text-sm text-gray-600">良好状态</p>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2 mb-1">
+                                        <div class="bg-primary h-2 rounded-full" style="width: 85%"></div>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-gray-500">
+                                        <span>0</span>
+                                        <span>50</span>
+                                        <span>100</span>
+                                    </div>
+                                </div>
+                                <div class="space-y-4 mb-6">
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span>情绪状态</span>
+                                            <span class="text-success">稳定</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="bg-success h-2 rounded-full" style="width: 80%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span>压力水平</span>
+                                            <span class="text-success">低</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="bg-success h-2 rounded-full" style="width: 30%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span>睡眠质量</span>
+                                            <span class="text-warning">中等</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="bg-warning h-2 rounded-full" style="width: 65%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span>声音特征稳定性</span>
+                                            <span class="text-success">高</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="bg-success h-2 rounded-full" style="width: 85%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between">
+                                    <button class="text-primary hover:text-primary/80 text-sm flex items-center">
+                                        <i class="fa fa-download mr-1"></i> 下载报告
+                                    </button>
+                                    <button class="text-primary hover:text-primary/80 text-sm flex items-center">
+                                        <i class="fa fa-share-alt mr-1"></i> 分享
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 右侧：详细报告 -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">风险评估</h3>
+                                <div class="space-y-4">
+                                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h4 class="font-medium text-gray-800">情绪波动风险</h4>
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">中等</span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mb-2">
+                                            检测到近期情绪波动较以往有所增加，特别是在录音样本中发现语速和音高的变化。
+                                        </p>
+                                        <div class="flex justify-between text-xs text-gray-500">
+                                            <span>建议：增加放松活动，保持规律作息</span>
+                                            <span>趋势：<i class="fa fa-arrow-up text-warning"></i> 上升</span>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h4 class="font-medium text-gray-800">压力相关风险</h4>
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">低</span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mb-2">
+                                            声音特征显示压力水平处于健康范围，与活动量和睡眠质量数据相符。
+                                        </p>
+                                        <div class="flex justify-between text-xs text-gray-500">
+                                            <span>建议：继续保持当前生活方式</span>
+                                            <span>趋势：<i class="fa fa-arrow-right text-gray-500"></i> 稳定</span>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h4 class="font-medium text-gray-800">健康状况风险</h4>
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">低</span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mb-2">
+                                            声音特征与健康数据综合分析显示，整体健康状况良好，无明显异常。
+                                        </p>
+                                        <div class="flex justify-between text-xs text-gray-500">
+                                            <span>建议：定期体检，保持健康习惯</span>
+                                            <span>趋势：<i class="fa fa-arrow-right text-gray-500"></i> 稳定</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">AI建议</h3>
+                                <div class="space-y-3">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center mt-0.5">
+                                            <i class="fa fa-check text-xs text-primary"></i>
+                                        </div>
+                                        <p class="ml-3 text-sm text-gray-700">
+                                            继续保持规律的作息时间，特别是睡眠时间，有助于情绪稳定。
+                                        </p>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center mt-0.5">
+                                            <i class="fa fa-check text-xs text-primary"></i>
+                                        </div>
+                                        <p class="ml-3 text-sm text-gray-700">
+                                            建议增加户外活动时间，每天至少30分钟的中等强度运动。
+                                        </p>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center mt-0.5">
+                                            <i class="fa fa-check text-xs text-primary"></i>
+                                        </div>
+                                        <p class="ml-3 text-sm text-gray-700">
+                                            注意压力管理，可以尝试冥想或深呼吸练习，每天10-15分钟。
+                                        </p>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center mt-0.5">
+                                            <i class="fa fa-check text-xs text-primary"></i>
+                                        </div>
+                                        <p class="ml-3 text-sm text-gray-700">
+                                            保持每日录音习惯，最佳时间为早晨起床后30分钟内。
+                                        </p>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center mt-0.5">
+                                            <i class="fa fa-check text-xs text-primary"></i>
+                                        </div>
+                                        <p class="ml-3 text-sm text-gray-700">
+                                            如有情绪波动加剧或持续不适，请咨询专业医疗人员。
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-50 rounded-lg p-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">下一步行动</h3>
+                                <div class="space-y-4">
+                                    <div class="bg-white rounded-lg p-4 shadow-sm flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-4">
+                                            <i class="fa fa-microphone text-blue-600"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-medium text-gray-800">继续录音监测</h4>
+                                            <p class="text-sm text-gray-600">保持每日录音习惯，一周后再次生成报告</p>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white rounded-lg p-4 shadow-sm flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-4">
+                                            <i class="fa fa-bed text-green-600"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-medium text-gray-800">改善睡眠质量</h4>
+                                            <p class="text-sm text-gray-600">尝试在睡前减少屏幕时间，保持卧室安静舒适</p>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white rounded-lg p-4 shadow-sm flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center mr-4">
+                                            <i class="fa fa-heartbeat text-purple-600"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-medium text-gray-800">健康数据同步</h4>
+                                            <p class="text-sm text-gray-600">定期同步您的健康设备数据，完善分析维度</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <img src="https://p26-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/a66267090af54ff5bbab2b77b505be8e~tplv-a9rns2rl98-image.image?lk3s=8e244e95&amp;rcl=20260226105034A4AA99B95B5F07BDE773&amp;rrcfp=f06b921b&amp;x-expires=1774666285&amp;x-signature=p1Vf93VKFR7bwNRHPqD8B38ZvY8%3D" alt="健康声音监测系统" class="h-8 w-8">
+                        <h3 class="text-lg font-bold">健康声音监测系统</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm">
+                        通过分析声音特征变化，结合健康数据，早期发现潜在健康风险，特别是情绪和神经系统相关疾病。
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">快速链接</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#dashboard" class="hover:text-white transition-colors">数据概览</a></li>
+                        <li><a href="#record" class="hover:text-white transition-colors">声音采集</a></li>
+                        <li><a href="#analysis" class="hover:text-white transition-colors">数据分析</a></li>
+                        <li><a href="#health-data" class="hover:text-white transition-colors">健康数据</a></li>
+                        <li><a href="#reports" class="hover:text-white transition-colors">AI报告</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">资源</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">使用指南</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">常见问题</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">研究论文</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">隐私政策</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">联系我们</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">联系我们</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li class="flex items-center">
+                            <i class="fa fa-envelope mr-2"></i>
+                            <span>service@JDM.com</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fa fa-phone mr-2"></i>
+                            <span>+86 123 4567 8901</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fa fa-map-marker mr-2"></i>
+                            <span>捷普电子有限公司</span>
+                        </li>
+                    </ul>
+                    <div class="flex space-x-4 mt-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-weixin text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-weibo text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-linkedin text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-github text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400 text-sm">
+                <p>© 2026 JDM. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 移动端菜单切换
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // 录音功能模拟
+        let isRecording = false;
+        let recordingInterval;
+        let recordingSeconds = 0;
+        
+        const startRecordingBtn = document.getElementById('start-recording');
+        const stopRecordingBtn = document.getElementById('stop-recording');
+        const recordingStatus = document.getElementById('recording-status');
+        const recordingTimer = document.getElementById('recording-timer');
+        const audioBars = document.querySelectorAll('.audio-wave .bar');
+        
+        startRecordingBtn.addEventListener('click', function() {
+            isRecording = true;
+            startRecordingBtn.disabled = true;
+            stopRecordingBtn.disabled = false;
+            recordingStatus.textContent = '正在录音';
+            recordingSeconds = 0;
+            
+            // 模拟录音计时器
+            recordingInterval = setInterval(function() {
+                recordingSeconds++;
+                const minutes = Math.floor(recordingSeconds / 60);
+                const seconds = recordingSeconds % 60;
+                recordingTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                // 模拟音频波形动画
+                audioBars.forEach(bar => {
+                    const height = Math.floor(Math.random() * 40) + 5;
+                    bar.style.height = `${height}px`;
+                });
+            }, 1000);
+            
+            // 模拟获取麦克风权限
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(function(stream) {
+                    console.log('麦克风已启用');
+                    // 实际应用中，这里会处理音频流
+                })
+                .catch(function(err) {
+                    console.error('无法访问麦克风:', err);
+                    alert('无法访问麦克风，请确保已授予权限。');
+                    stopRecording();
+                });
+        });
+        
+        stopRecordingBtn.addEventListener('click', function() {
+            stopRecording();
+        });
+        
+        function stopRecording() {
+            isRecording = false;
+            clearInterval(recordingInterval);
+            startRecordingBtn.disabled = false;
+            stopRecordingBtn.disabled = true;
+            recordingStatus.textContent = '录音已完成';
+            
+            // 重置音频波形
+            audioBars.forEach(bar => {
+                bar.style.height = '10px';
+            });
+            
+            // 模拟录音处理和分析
+            setTimeout(function() {
+                alert('录音已保存并分析完成！');
+                recordingStatus.textContent = '准备录音';
+                recordingTimer.textContent = '00:00';
+            }, 1000);
+        }
+        
+        // 图表初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 情绪状态图表
+            const moodCtx = document.getElementById('moodChart').getContext('2d');
+            const moodChart = new Chart(moodCtx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [78, 22],
+                        backgroundColor: [
+                            '#1a56db',
+                            '#e5e7eb'
+                        ],
+                        borderWidth: 0,
+                        cutout: '80%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    }
+                }
+            });
+            
+            // 声音特征趋势图
+            const voiceFeaturesCtx = document.getElementById('voiceFeaturesChart').getContext('2d');
+            const voiceFeaturesChart = new Chart(voiceFeaturesCtx, {
+                type: 'line',
+                data: {
+                    labels: ['6/15', '6/20', '6/25', '6/30', '7/5', '7/10', '7/15'],
+                    datasets: [
+                        {
+                            label: '音高 (Hz)',
+                            data: [120, 125, 118, 122, 145, 130, 128],
+                            borderColor: '#1a56db',
+                            backgroundColor: 'rgba(26, 86, 219, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: '音量',
+                            data: [0.65, 0.7, 0.68, 0.72, 0.8, 0.75, 0.73],
+                            borderColor: '#0ea5e9',
+                            backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: '语速 (字/分钟)',
+                            data: [140, 145, 138, 142, 180, 155, 148],
+                            borderColor: '#38bdf8',
+                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+            
+            // 音高与情绪相关性散点图
+            const pitchMoodCtx = document.getElementById('pitchMoodChart').getContext('2d');
+            const pitchMoodChart = new Chart(pitchMoodCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '音高与情绪',
+                        data: [
+                            { x: 120, y: 0.75 },
+                            { x: 125, y: 0.8 },
+                            { x: 118, y: 0.78 },
+                            { x: 122, y: 0.82 },
+                            { x: 145, y: 0.6 },
+                            { x: 130, y: 0.7 },
+                            { x: 128, y: 0.75 }
+                        ],
+                        backgroundColor: '#1a56db',
+                        borderColor: '#1a56db',
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `音高: ${context.parsed.x} Hz, 情绪评分: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '音高 (Hz)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '情绪评分'
+                            },
+                            min: 0.5,
+                            max: 1
+                        }
+                    }
+                }
+            });
+            
+            // 音量与压力水平相关性散点图
+            const volumeStressCtx = document.getElementById('volumeStressChart').getContext('2d');
+            const volumeStressChart = new Chart(volumeStressCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '音量与压力',
+                        data: [
+                            { x: 0.65, y: 0.3 },
+                            { x: 0.7, y: 0.35 },
+                            { x: 0.68, y: 0.32 },
+                            { x: 0.72, y: 0.4 },
+                            { x: 0.8, y: 0.6 },
+                            { x: 0.75, y: 0.45 },
+                            { x: 0.73, y: 0.38 }
+                        ],
+                        backgroundColor: '#0ea5e9',
+                        borderColor: '#0ea5e9',
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `音量: ${context.parsed.x}, 压力水平: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '音量'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '压力水平'
+                            },
+                            min: 0,
+                            max: 1
+                        }
+                    }
+                }
+            });
+            
+            // 健康数据趋势图
+            const healthDataCtx = document.getElementById('healthDataChart').getContext('2d');
+            const healthDataChart = new Chart(healthDataCtx, {
+                type: 'line',
+                data: {
+                    labels: ['6/15', '6/20', '6/25', '6/30', '7/5', '7/10', '7/15'],
+                    datasets: [
+                        {
+                            label: '睡眠时长 (小时)',
+                            data: [7.5, 7.2, 7.8, 7.0, 6.5, 7.2, 7.5],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '平均心率 (BPM)',
+                            data: [72, 74, 71, 73, 78, 75, 72],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: '活动量 (千步)',
+                            data: [8.5, 7.8, 9.2, 8.0, 6.5, 8.8, 8.5],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y2'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '睡眠时长 (小时)'
+                            },
+                            min: 5,
+                            max: 10
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '心率 (BPM)'
+                            },
+                            min: 60,
+                            max: 90,
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        },
+                        y2: {
+                            type: 'linear',
+                            display: false,
+                            min: 0,
+                            max: 15
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+</body></html>
