@@ -235,8 +235,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you have any questions or suggestions, please contact us:
 
-- Email: contact@healthvoice.com
-- Project Link: https://github.com/yourusername/health-voice-monitor
+- Email: contact@jdm.com
+- Project Link: https://github.com/realDavy/health-voice-monitor
 
 ## Disclaimer
 
